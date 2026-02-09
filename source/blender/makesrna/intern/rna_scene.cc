@@ -9308,7 +9308,7 @@ static void rna_def_scene_eevee(BlenderRNA *brna)
   prop = RNA_def_property(srna, "shadow_use_pcf", PROP_BOOLEAN, PROP_NONE);
   RNA_def_property_boolean_sdna(prop, nullptr, "shadow_use_pcf", 1);
   RNA_def_property_ui_text(prop,
-                           "Shadow PCF",
+                           "Shadow Pcf",
                            "Use stable 3x3 Percentage Closer Filtering instead of jittered "
                            "ray-tracing for non-jittered lights (no TAA required)");
   RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
@@ -9319,8 +9319,8 @@ static void rna_def_scene_eevee(BlenderRNA *brna)
   RNA_def_property_range(prop, 0.0f, 10.0f);
   RNA_def_property_ui_range(prop, 0.0f, 2.0f, 0.1f, 2);
   RNA_def_property_ui_text(prop,
-                           "PCF Offset",
-                           "Scale of the PCF center offset to reduce self-shadowing artifacts");
+                           "Pcf Offset",
+                           "Scale of the Pcf center offset to reduce self-shadowing artifacts");
   RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
   RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);
 
@@ -9329,8 +9329,8 @@ static void rna_def_scene_eevee(BlenderRNA *brna)
   RNA_def_property_range(prop, 0.01f, 10.0f);
   RNA_def_property_ui_range(prop, 0.1f, 3.0f, 0.1f, 2);
   RNA_def_property_ui_text(prop,
-                           "PCF Grain Size",
-                           "Scale factor for the PCF kernel tap spacing (larger values spread "
+                           "Pcf Grain Size",
+                           "Scale factor for the Pcf kernel tap spacing (larger values spread "
                            "the filter wider, softening shadows)");
   RNA_def_property_override_flag(prop, PROPOVERRIDE_OVERRIDABLE_LIBRARY);
   RNA_def_property_update(prop, NC_SCENE | ND_RENDER_OPTIONS, nullptr);

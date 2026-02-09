@@ -56,7 +56,7 @@ ShadowMapTracingState shadow_map_trace_init(int sample_count, float step_offset)
 }
 
 /**
- * UPBGE: Unified 3x3 PCF helper for both directional and punctual lights.
+ * UPBGE PCF path: Unified 3x3 PCF helper for both directional and punctual lights.
  * Uses `shadow_sample()` which returns (receiver_dist - occluder_dist):
  *   positive = in shadow, negative or large = visible.
  * `is_directional` selects the correct shadow sampling path.
@@ -519,9 +519,9 @@ float shadow_eval(LightData light,
   /* Shadow map texel radius at the receiver position. */
   float texel_radius = shadow_texel_radius_at_position(light, is_directional, P);
 
-  /* UPBGE: If the global PCF option is enabled and the light doesn't use jitter,
+  /* UPBGE PCF path: If the global PCF option is enabled and the light doesn't use jitter,
    * use a stable 3x3 PCF instead of the noisy ray-tracing path.
-   * This gives clean shadows with 1 ray / 1 step, no TAA required.
+   * This gives cleaner shadows with 1 ray / 1 step. If no Taa, slight but nice noise.
    *
    * pcf_step and softness are fixed at texel_radius scale so the kernel
    * always samples neighbouring texels and never reaches far enough to
@@ -540,7 +540,7 @@ float shadow_eval(LightData light,
     float3 P_biased = P + N_bias * shadow_normal_offset(Ng, L, texel_radius);
 
     /* User controls feed into the jitter only:
-     * - offset_scale scales the random input (0 = deterministic pattern).
+     * - offset_scale modulates the random input.
      * - grain_scale scales the resulting offset amplitude. */
     float2 temporal_jitter = random_shadow_3d.xy * 0.25f;
     float2 pcf_rnd = fract(random_pcf_2d) + temporal_jitter * offset_scale * 2.0f;

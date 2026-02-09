@@ -732,8 +732,8 @@ class RENDER_PT_eevee_sampling_shadows(RenderButtonsPanel, Panel):
         col.prop(props, "shadow_resolution_scale", text="Resolution")
 
         #upbge
-        col = layout.column(heading="PCF", align=True)
-        col.prop(props, "shadow_use_pcf", text="Enable PCF")
+        col = layout.column(heading="Pcf", align=True)
+        col.prop(props, "shadow_use_pcf", text="Enable pcf")
         sub = col.column(align=True)
         sub.active = props.shadow_use_pcf
         sub.prop(props, "shadow_pcf_offset", text="Offset")
