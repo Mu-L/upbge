@@ -273,6 +273,7 @@ gpu::Shader *GPU_shader_create_from_info_python(const GPUShaderCreateInfo *_info
 #endif
 
   info.builtins_ |= BuiltinBits::NO_BUFFER_TYPE_LINTING;
+  info.builtins_ |= BuiltinBits::NO_PREPROCESSOR;
 
   auto preprocess_source = [&](const std::string &input_src) {
     std::string processed_str;
@@ -302,21 +303,7 @@ gpu::Shader *GPU_shader_create_from_info_python(const GPUShaderCreateInfo *_info
                                    preprocess_source(info.fragment_source_generated)});
   }
 
-  if (!preprocess) {
-    /* 1) Disable shaders preprocessors for users side shaders,
-     * else, some shaders are truncated/notcompiled.
-     * 2) Internal upbge Compute shaders used to compile ok when using
-     * GPU_shader_preprocess_source(input_src, info) but it fails after:
-     * 9c457ddf070e0c0acf5ccdcdcf4723ab3e401726 or another similar commit
-     * near 16/01/2026 */
-    G.debug |= G_DEBUG_GPU_SHADER_NO_PREPROCESSOR;
-  }
-
   gpu::Shader *result = GPUBackend::get()->get_compiler()->compile(info, false);
-
-  if (!preprocess) {
-    G.debug &= ~G_DEBUG_GPU_SHADER_NO_PREPROCESSOR;
-  }
 
   return result;
 }
@@ -846,6 +833,8 @@ Shader *ShaderCompiler::compile(const shader::ShaderCreateInfo &orig_info, bool 
   for (const shader::ShaderCreateInfo::FragOut &frag_out : info.fragment_outputs_) {
     shader->fragment_output_bits |= 1u << frag_out.index;
   }
+
+  shader->skip_preprocessor = bool(specialized_info.builtins_ & BuiltinBits::NO_PREPROCESSOR);
 
   std::string defines = shader->defines_declare(info);
   std::string resources = shader->resources_declare(info);
