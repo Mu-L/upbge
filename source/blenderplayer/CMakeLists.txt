@@ -508,6 +508,12 @@ endif()
 
 blender_target_include_dirs(blenderplayer ${INC})
 
+# `vcpkg` substitutes our libraries with theirs, which will cause issues when you run
+# these builds on other systems due to missing DLL's. So we opt out the use of `vcpkg`.
+if(WIN32)
+  set_target_properties(blenderplayer PROPERTIES VS_GLOBAL_VcpkgEnabled "false")
+endif()
+
 # Always install MaterialX files regardless if Blender itself uses them, the
 # bundled Python module still needs it.
 if(WITH_MATERIALX AND LIBDIR AND PLAYER_TARGETDIR_LIB)
