@@ -213,15 +213,9 @@ void fill_texture_params_from_tex(GPUTextureParams &gpu_tex_params,
   gpu_tex_params.tex_voronoi_misc[2] = float(tex->vn_coltype);
 
   if (deformed_eval) {
-    /* Pack matrix explicitly as column-major floats to match GLSL std140 mat4 layout.
-     * Copy into a temp then store column-major (cols contiguous). */
-    float tmp[4][4];
-    memcpy(tmp, deformed_eval->object_to_world().ptr(), sizeof(tmp));
-    for (int row = 0; row < 4; ++row) {
-      for (int col = 0; col < 4; ++col) {
-        gpu_tex_params.u_object_to_world_mat[col * 4 + row] = tmp[row][col];
-      }
-    }
+    memcpy(gpu_tex_params.u_object_to_world_mat,
+           deformed_eval->object_to_world().ptr(),
+           sizeof(float) * 16);
   }
 
   float mapref_imat[4][4];
@@ -296,13 +290,7 @@ void fill_texture_params_from_tex(GPUTextureParams &gpu_tex_params,
         break;
     }
   }
-
-  /* Pack u_mapref_imat column-major to match GLSL std140 mat4 layout. */
-  for (int row = 0; row < 4; ++row) {
-    for (int col = 0; col < 4; ++col) {
-      gpu_tex_params.u_mapref_imat[col * 4 + row] = mapref_imat[row][col];
-    }
-  }
+  memcpy(gpu_tex_params.u_mapref_imat, mapref_imat, sizeof(float) * 16);
 }
 
 /* Fill a GPUColorBand from a CPU ColorBand. Returns false if `src` is null or empty. */
