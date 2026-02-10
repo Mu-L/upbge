@@ -60,9 +60,6 @@ uint float_to_ordered_uint(float f) {
   return (u & 0x80000000u) != 0u ? ~u : (u ^ 0x80000000u);
 }
 
-shared float local_min_vals[256];
-shared float local_max_vals[256];
-
 void main() {
   const uint gid = gl_GlobalInvocationID.x;
   const uint lid = gl_LocalInvocationID.x;
@@ -567,6 +564,10 @@ gpu::StorageBuf *SimpleDeformManager::dispatch_deform(
     using namespace gpu::shader;
     ShaderCreateInfo minmax_info("pyGPU_Shader");
     minmax_info.local_group_size(256, 1, 1);
+    minmax_info.typedef_source_generated = R"GLSL(
+      shared float local_min_vals[256];
+      shared float local_max_vals[256];
+    )GLSL";
     minmax_info.storage_buf(0, Qualifier::read, "vec4", "input_positions[]");
     minmax_info.storage_buf(1, Qualifier::write, "uint", "minmax_result[]");
     minmax_info.push_constant(Type::float4x4_t, "transmat");
