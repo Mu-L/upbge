@@ -521,7 +521,7 @@ void DEG_foreach_ID(const Depsgraph *depsgraph, DEGForeachIDCallback callback);
 // Callback add BGE objects to drawing pass
 using BGEObjectProvider = void (*)(DEGObjectIterData *data);
 
-void add_bge_object(DEGObjectIterData *data, Object *ob, float mat[4][4]);
+void add_bge_object(DEGObjectIterData *data, Object *ob, float mat[4][4], float color[4]);
 
 // Register a provider to add BGE objects to drawing pass (called from game engine)
 void DEG_register_bge_object_provider(BGEObjectProvider provider);

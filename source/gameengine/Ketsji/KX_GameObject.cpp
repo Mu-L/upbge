@@ -1443,10 +1443,10 @@ void KX_GameObject::setAngularVelocity(const MT_Vector3 &ang_vel, bool local)
 void KX_GameObject::SetObjectColor(const MT_Vector4 &rgbavec)
 {
   m_objectColor = rgbavec;
-  blender::Object *ob_orig = GetBlenderObject();
   if (m_is_dupli_instance) {
     return;
   }
+  blender::Object *ob_orig = GetBlenderObject();
   if (ob_orig && GetScene()->OrigObCanBeTransformedInRealtime(ob_orig) &&
       ELEM(ob_orig->type, OB_MESH, OB_CURVES_LEGACY, OB_SURF, OB_FONT, OB_MBALL)) {
     copy_v4_v4(ob_orig->color, m_objectColor.getValue());

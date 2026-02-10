@@ -124,7 +124,9 @@ static void bge_dupli_provider(DEGObjectIterData *data)
       game_obj->NodeGetWorldTransform().getValue(&mat[0][0]);
 
       if (blender_obj) {
-        add_bge_object(data, blender_obj, mat);
+        float color[4];
+        game_obj->GetObjectColor().getValue(color);
+        add_bge_object(data, blender_obj, mat, color);
       }
     }
   }

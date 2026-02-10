@@ -54,11 +54,15 @@ using evil::DEG_iterator_temp_object_from_dupli;
 
 /* UPBGE specific iterator stuff for duplis (adds BGE duplis to drawing pass) */
 // Add a BGE object to the iterator's vector
-void add_bge_object(DEGObjectIterData *data, Object *ob, float mat[4][4])
+void add_bge_object(DEGObjectIterData *data, Object *ob, float mat[4][4], float color[4])
 {
-  if (!ob)
+  if (!ob) {
     return;
+  }
   data->bge_objects.emplace_back(std::make_unique<BGEObjectData>(ob, mat));
+  if (color) {
+    copy_v4_v4(data->bge_objects.back()->temp_object.color, color);
+  }
 }
 
 namespace {
