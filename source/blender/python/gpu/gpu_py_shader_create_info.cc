@@ -695,11 +695,9 @@ PyDoc_STRVAR(
     "   :type type_name: str\n"
     "   :arg name: The storage buffer variable name.\n"
     "   :type name: str\n"
-    "   :arg qualifiers: Set containing values that describe how the storage buffer is to be\n"
-    "      accessed. Possible values are:\n"
-    "" PYDOC_QUALIFIERS
-    "\n"
-    "   :type qualifiers: set[str]\n");
+    "   :param qualifiers: Set containing values that describe how the ssbo is to be "
+    "read or written.\n"
+    "   :type qualifiers: set[" PYDOC_QUALIFIERS_LITERAL "]\n");
 static PyObject *pygpu_shader_info_storage_buf(BPyGPUShaderCreateInfo *self,
                                                PyObject *args,
                                                PyObject *kwds)
