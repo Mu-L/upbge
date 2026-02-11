@@ -581,6 +581,8 @@ gpu::StorageBuf *WarpManager::dispatch_deform(const WarpModifierData *wmd,
   const gpu::shader::SpecializationConstants *constants = &GPU_shader_get_default_constant_state(
       shader);
 
+  GPU_shader_bind(shader, constants);
+
   GPU_storagebuf_bind(ssbo_out, 0);
   GPU_storagebuf_bind(ssbo_in, 1);
   if (ssbo_vgroup) {
