@@ -2264,7 +2264,7 @@ static void ui_linkline_remove_active(Block *block)
   uiLinkLine *line, *nline;
   int a, b;
 
-  for (const std::unique_ptr<Button> &but : block->buttons) {
+  for (const std::unique_ptr<Button> &but : block->buttons_ptrs) {
     if (but->type == ButtonType::Link && but->link) {
       for (line = static_cast<uiLinkLine *>(but->link->lines.first); line; line = nline) {
         nline = line->next;
@@ -2464,8 +2464,8 @@ static void ui_apply_but_LINK(bContext *C, Button *but, HandleButtonData *data)
   ARegion *ar = CTX_wm_region(C);
   Button *bt = nullptr;
 
-  for (int i = 0; i < but->block->buttons.size(); i++) {
-    bt = but->block->buttons[i].get();
+  for (int i = 0; i < but->block->buttons_ptrs.size(); i++) {
+    bt = but->block->buttons_ptrs[i].get();
     const int ptxy[2] = {(int)(but->linkto[0] + ar->winrct.xmin), (int)(but->linkto[1] + ar->winrct.ymin)};
     if (button_contains_point_px(bt, ar, ptxy)) {
       break;

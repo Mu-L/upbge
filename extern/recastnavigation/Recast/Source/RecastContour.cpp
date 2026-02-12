@@ -16,7 +16,10 @@
 // 3. This notice may not be removed or altered from any source distribution.
 //
 
-#define _USE_MATH_DEFINES
+#ifndef _USE_MATH_DEFINES
+#  define _USE_MATH_DEFINES
+#endif
+
 #include <math.h>
 #include <string.h>
 #include <stdio.h>

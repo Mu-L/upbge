@@ -126,8 +126,8 @@ static wmOperatorStatus cut_links_exec(bContext *C, wmOperator *op)
     for (block = static_cast<Block *>(region->runtime->uiblocks.first); block; block = block->next)
     {
       int i = 0;
-      while (i < block->buttons.size()) {
-        but = block->buttons[i].get();
+      while (i < block->buttons_ptrs.size()) {
+        but = block->buttons_ptrs[i].get();
         if (but->type == ButtonType::Link && but->link) {
           for (line = static_cast<uiLinkLine *>(but->link->lines.first); line; line = nline) {
             nline = line->next;

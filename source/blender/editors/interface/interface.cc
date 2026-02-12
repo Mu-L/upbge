@@ -802,7 +802,7 @@ static void ui_draw_links(blender::ui::Block *block)
   bool found_selectline = false;
   bool found_activeline = false;
 
-  for (const std::unique_ptr<Button> &but : block->buttons) {
+  for (const std::unique_ptr<Button> &but : block->buttons_ptrs) {
     if (but->type == ButtonType::Link && but->link) {
       for (line = static_cast <uiLinkLine *>(but->link->lines.first); line; line = line->next) {
         if (!(line->from->flag & UI_HOVER) && !(line->to->flag & UI_HOVER)) {
@@ -819,7 +819,7 @@ static void ui_draw_links(blender::ui::Block *block)
   }
 
   /* Draw the inactive lines (lines with neither button being hovered over) */
-  for (const std::unique_ptr<Button> &but : block->buttons) {
+  for (const std::unique_ptr<Button> &but : block->buttons_ptrs) {
     if (but->type == ButtonType::Link && but->link) {
       for (line = static_cast <uiLinkLine *>(but->link->lines.first); line; line = line->next) {
         if (!(line->from->flag & UI_HOVER) && !(line->to->flag & UI_HOVER)) {
@@ -833,7 +833,7 @@ static void ui_draw_links(blender::ui::Block *block)
   /* Draw any active lines (lines with either button being hovered over).
    * Do this last so they appear on top of inactive and gray out lines. */
   if (found_activeline) {
-    for (const std::unique_ptr<Button> &but : block->buttons) {
+    for (const std::unique_ptr<Button> &but : block->buttons_ptrs) {
       if (but->type == ButtonType::Link && but->link) {
         for (line = static_cast <uiLinkLine *>(but->link->lines.first); line; line = line->next) {
           if ((line->from->flag & UI_HOVER) || (line->to->flag & UI_HOVER))
@@ -1002,7 +1002,7 @@ static void ui_but_update_linklines(blender::ui::Block *block, Button *oldbut, B
   }
 
   /* check all other button links */
-  for (const std::unique_ptr<Button> &but : block->buttons) {
+  for (const std::unique_ptr<Button> &but : block->buttons_ptrs) {
     if (but.get() != newbut && but->type == ButtonType::Link && but->link) {
       for (line = static_cast <uiLinkLine *>(but->link->lines.first); line; line = line->next) {
         if (line->to == newbut)
@@ -2606,8 +2606,8 @@ static Button *ui_linkline_find_inlink(blender::ui::Block *block, void *poin)
   Button *but = nullptr;
 
   int i = 0;
-  while (i < block->buttons.size()) {
-    but = block->buttons[i].get();
+  while (i < block->buttons_ptrs.size()) {
+    but = block->buttons_ptrs[i].get();
     if (but->type == ButtonType::Inlink) {
       if (but->poin == poin)
         return but;
@@ -2641,8 +2641,8 @@ void UI_block_links_compose(Block *block)
   int a;
 
   int i = 0;
-  while (i < block->buttons.size()) {
-    but = block->buttons[i].get();
+  while (i < block->buttons_ptrs.size()) {
+    but = block->buttons_ptrs[i].get();
     if (but->type == ButtonType::Link) {
       link = but->link;
 

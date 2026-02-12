@@ -187,13 +187,13 @@ enum {
 /** The maximum number of items a radial menu (pie menu) can contain. */
 #define PIE_MAX_ITEMS 8
 
-typedef struct uiLinkLine { /* only for draw/edit */
+struct uiLinkLine { /* only for draw/edit */
   struct uiLinkLine *next, *prev;
   struct Button *from, *to;
   short flag, deactive;
-} uiLinkLine;
+};
 
-typedef struct {
+struct uiLink {
   void **poin;    /* pointer to original pointer */
   void ***ppoin;  /* pointer to original pointer-array */
   short *totlink; /* if pointer-array, here is the total */
@@ -202,7 +202,7 @@ typedef struct {
   short fromcode, tocode;
 
   ListBase lines;
-} uiLink;
+};
 
 struct Button : NonMovable {
 
