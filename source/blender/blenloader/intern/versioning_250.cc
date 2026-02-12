@@ -1470,10 +1470,12 @@ void blo_do_versions_250(FileData *fd, Library * /*lib*/, Main *bmain)
 
         while (node) {
           if (node->type_legacy == CMP_NODE_COLORBALANCE) {
-            NodeColorBalance *n = static_cast<NodeColorBalance *>(node->storage);
-            n->lift[0] += 1.0f;
-            n->lift[1] += 1.0f;
-            n->lift[2] += 1.0f;
+            if (version_node_ensure_storage_or_invalidate(*node)) {
+              NodeColorBalance *n = static_cast<NodeColorBalance *>(node->storage);
+              n->lift[0] += 1.0f;
+              n->lift[1] += 1.0f;
+              n->lift[2] += 1.0f;
+            }
           }
           node = node->next;
         }
@@ -1485,10 +1487,12 @@ void blo_do_versions_250(FileData *fd, Library * /*lib*/, Main *bmain)
 
       while (node) {
         if (node->type_legacy == CMP_NODE_COLORBALANCE) {
-          NodeColorBalance *n = static_cast<NodeColorBalance *>(node->storage);
-          n->lift[0] += 1.0f;
-          n->lift[1] += 1.0f;
-          n->lift[2] += 1.0f;
+          if (version_node_ensure_storage_or_invalidate(*node)) {
+            NodeColorBalance *n = static_cast<NodeColorBalance *>(node->storage);
+            n->lift[0] += 1.0f;
+            n->lift[1] += 1.0f;
+            n->lift[2] += 1.0f;
+          }
         }
 
         node = node->next;
@@ -1987,9 +1991,11 @@ void blo_do_versions_250(FileData *fd, Library * /*lib*/, Main *bmain)
       if (scene.nodetree) {
         for (bNode &node : scene.nodetree->nodes) {
           if (node.type_legacy == CMP_NODE_BLUR) {
-            NodeBlurData *nbd = static_cast<NodeBlurData *>(node.storage);
-            nbd->percentx *= 100.0f;
-            nbd->percenty *= 100.0f;
+            if (version_node_ensure_storage_or_invalidate(node)) {
+              NodeBlurData *nbd = static_cast<NodeBlurData *>(node.storage);
+              nbd->percentx *= 100.0f;
+              nbd->percenty *= 100.0f;
+            }
           }
         }
       }

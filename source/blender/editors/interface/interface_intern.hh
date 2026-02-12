@@ -9,6 +9,7 @@
 #pragma once
 
 #include <functional>
+#include <ranges>
 
 #include "BLI_compiler_attrs.h"
 #include "BLI_enum_flags.hh"
@@ -203,7 +204,7 @@ typedef struct {
   ListBase lines;
 } uiLink;
 
-struct Button {
+struct Button : NonMovable {
 
   /** Pointer back to the layout item holding this button. */
   Layout *layout = nullptr;
@@ -381,9 +382,9 @@ struct Button {
 
   Button() = default;
   /** Performs a mostly shallow copy for now. Only contained C++ types are deep copied. */
-  Button(const Button &other) = default;
+  explicit Button(const Button &other) = default;
   /** Mostly shallow copy, just like copy constructor above. */
-  Button &operator=(const Button &other) = default;
+  Button &operator=(const Button &other) = delete;
 
   virtual ~Button() = default;
 };
@@ -636,7 +637,7 @@ struct ViewLink;
 struct Block {
   Block *next = nullptr, *prev = nullptr;
 
-  Vector<std::unique_ptr<Button>> buttons;
+  Vector<std::unique_ptr<Button>> buttons_ptrs;
   Panel *panel = nullptr;
   Block *oldblock = nullptr;
 
@@ -759,6 +760,19 @@ struct Block {
   int but_index(const Button *but) const;
   [[nodiscard]] Button *next_but(const Button *but) const;
   [[nodiscard]] Button *prev_but(const Button *but) const;
+
+  static Button &button_ptr_dereference(const std::unique_ptr<Button> &button)
+  {
+    return *button;
+  }
+
+  /** A view of #Block::buttons_ptrs which allows range-based for loops as #Buttons references. */
+  std::ranges::transform_view<std::ranges::ref_view<const Vector<std::unique_ptr<Button>>>,
+                              Button &(*)(const std::unique_ptr<Button> &)>
+  buttons() const
+  {
+    return this->buttons_ptrs | std::views::transform(button_ptr_dereference);
+  }
 };
 
 struct SafetyRect {
