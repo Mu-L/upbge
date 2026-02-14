@@ -85,12 +85,6 @@ set(LIB
   ge_scenegraph
 )
 
-if(MSVC)
-  add_definitions(
-    /DNOMINMAX
-  )
-endif()
-
 if(WITH_GAMEENGINE_DECKLINK)
   add_definitions(-DWITH_GAMEENGINE_DECKLINK)
 
