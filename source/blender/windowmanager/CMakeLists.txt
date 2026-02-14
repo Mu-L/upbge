@@ -116,10 +116,6 @@ set(LIB
   PRIVATE bf::dependencies::optional::audaspace
 )
 
-if(WIN32)
-  add_definitions(-DNOMINMAX)
-endif()
-
 if(WITH_HEADLESS)
   add_definitions(-DWITH_HEADLESS)
 else()
