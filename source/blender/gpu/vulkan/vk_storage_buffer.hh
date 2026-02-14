@@ -41,7 +41,7 @@ class VKStorageBuffer : public StorageBuf {
   void clear(uint32_t clear_value) override;
   void copy_sub(VertBuf *src, uint dst_offset, uint src_offset, uint copy_size) override;
   void read(void *data) override;
-  bool read_fast(void *data) override;
+  bool read_fast(void *data) override; //upbge
   void async_flush_to_host() override;
   void sync_as_indirect_buffer() override { /* No-Op. */ };
 

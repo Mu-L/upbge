@@ -329,35 +329,35 @@ void main() {
     }
   }
 
+#ifdef USE_BOUNDS_REDUCTION
   // 3) Bounds reduction (in-shader, avoids a separate dispatch)
-  if (bounds_enabled != 0) {
-    const float INF = 1.0 / 0.0;
-    wg_min[lid] = valid ? p_mesh.xyz : vec3(INF);
-    wg_max[lid] = valid ? p_mesh.xyz : vec3(-INF);
+  const float INF = 1.0 / 0.0;
+  wg_min[lid] = valid ? p_mesh.xyz : vec3(INF);
+  wg_max[lid] = valid ? p_mesh.xyz : vec3(-INF);
 
+  barrier();
+  memoryBarrierShared();
+
+  for (uint s = gl_WorkGroupSize.x >> 1; s > 0u; s >>= 1) {
+    if (lid < s) {
+      wg_min[lid] = min(wg_min[lid], wg_min[lid + s]);
+      wg_max[lid] = max(wg_max[lid], wg_max[lid + s]);
+    }
     barrier();
     memoryBarrierShared();
-
-    for (uint s = gl_WorkGroupSize.x >> 1; s > 0u; s >>= 1) {
-      if (lid < s) {
-        wg_min[lid] = min(wg_min[lid], wg_min[lid + s]);
-        wg_max[lid] = max(wg_max[lid], wg_max[lid + s]);
-      }
-      barrier();
-      memoryBarrierShared();
-    }
-
-    if (lid == 0u) {
-      vec3 gmin = wg_min[0];
-      vec3 gmax = wg_max[0];
-      atomicMin(bounds_out[0], float_to_ordered_uint(gmin.x));
-      atomicMin(bounds_out[1], float_to_ordered_uint(gmin.y));
-      atomicMin(bounds_out[2], float_to_ordered_uint(gmin.z));
-      atomicMax(bounds_out[4], float_to_ordered_uint(gmax.x));
-      atomicMax(bounds_out[5], float_to_ordered_uint(gmax.y));
-      atomicMax(bounds_out[6], float_to_ordered_uint(gmax.z));
-    }
   }
+
+  if (lid == 0u) {
+    vec3 gmin = wg_min[0];
+    vec3 gmax = wg_max[0];
+    atomicMin(bounds_out[0], float_to_ordered_uint(gmin.x));
+    atomicMin(bounds_out[1], float_to_ordered_uint(gmin.y));
+    atomicMin(bounds_out[2], float_to_ordered_uint(gmin.z));
+    atomicMax(bounds_out[4], float_to_ordered_uint(gmax.x));
+    atomicMax(bounds_out[5], float_to_ordered_uint(gmax.y));
+    atomicMax(bounds_out[6], float_to_ordered_uint(gmax.z));
+  }
+#endif
 }
 )GLSL";
 
@@ -680,27 +680,24 @@ bke::GpuComputeStatus BKE_mesh_gpu_run_compute(
 
   /* --- Bounds SSBO injection for scatter shader --- */
   const bool is_scatter = (main_glsl && main_glsl == scatter_to_corners_main_glsl);
-  /* Check if caller already injected bounds_out (unlikely but possible). */
-  const bool caller_has_bounds = has_bind_name("bounds_out", local_bindings);
   /* Check if mesh has bounds computation enabled via its flag.
    * Disabled on Metal backend where GPU_storagebuf_read_fast is not implemented. */
-  const bool bounds_enabled = is_scatter && !caller_has_bounds &&
-                              (mesh_orig->is_running_gpu_animation_playback != 0) &&
+  const bool bounds_enabled = is_scatter && (mesh_orig->is_running_gpu_animation_playback != 0) &&
                               (GPU_backend_get_type() != GPU_BACKEND_METAL);
-  gpu::StorageBuf *bounds_ssbo = nullptr;
-  if (bounds_enabled) {
-    const std::string bounds_key = "scatter_bounds_out";
+  const std::string bounds_key = "scatter_bounds_out";
+  gpu::StorageBuf *bounds_ssbo = bke::BKE_mesh_gpu_internal_ssbo_get(mesh_orig, bounds_key);
+  if (!bounds_ssbo) {
     bounds_ssbo = bke::BKE_mesh_gpu_internal_ssbo_ensure(
-        mesh_orig, const_cast<Object *>(ob_eval), bounds_key, sizeof(uint32_t) * 8);
-    if (bounds_ssbo) {
-      bke::GpuMeshComputeBinding gb = {};
-      gb.binding = MESH_GPU_BOUNDS_BINDING;
-      gb.buffer = bounds_ssbo;
-      gb.qualifiers = gpu::shader::Qualifier::read_write;
-      gb.type_name = "uint";
-      gb.bind_name = "bounds_out[]";
-      local_bindings.append(gb);
-    }
+        mesh_orig, const_cast<Object *>(ob_eval), bounds_key, sizeof(uint) * 8);
+  }
+  if (bounds_ssbo) {
+    bke::GpuMeshComputeBinding gb = {};
+    gb.binding = MESH_GPU_BOUNDS_BINDING;
+    gb.buffer = bounds_ssbo;
+    gb.qualifiers = gpu::shader::Qualifier::read_write;
+    gb.type_name = "uint";
+    gb.bind_name = "bounds_out[]";
+    local_bindings.append(gb);
   }
 
   std::string glsl_accessors = BKE_mesh_gpu_topology_glsl_accessors_string(mesh_data.topology);
@@ -758,7 +755,7 @@ bke::GpuComputeStatus BKE_mesh_gpu_run_compute(
 
     info.specialization_constant(Type::int_t, "normals_domain", normals_domain_val);
     info.specialization_constant(Type::int_t, "normals_hq", normals_hq_val);
-    info.specialization_constant(Type::int_t, "bounds_enabled", int(bounds_enabled));
+    info.define("USE_BOUNDS_REDUCTION", bounds_enabled ? "1" : "0");
 
     BKE_mesh_gpu_topology_add_specialization_constants(info, mesh_data.topology);
 

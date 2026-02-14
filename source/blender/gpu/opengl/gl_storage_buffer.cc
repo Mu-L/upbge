@@ -250,6 +250,7 @@ void GLStorageBuf::read(void *data)
   memcpy(data, persistent_ptr_, size_in_bytes_);
 }
 
+// upbge
 bool GLStorageBuf::read_fast(void *data)
 {
   if (data == nullptr) {

@@ -70,7 +70,7 @@ class StorageBuf {
    * The default implementation falls back to the synchronous `async_flush_to_host()` + `read()`
    * path (returns `true` always, blocking).
    */
-  virtual bool read_fast(void *data);
+  virtual bool read_fast(void *data); //upbge
 };
 
 #undef DEBUG_NAME_LEN

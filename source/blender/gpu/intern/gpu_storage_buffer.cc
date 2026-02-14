@@ -46,6 +46,7 @@ void StorageBuf::usage_size_set(size_t usage_size)
   usage_size_in_bytes_ = usage_size;
 }
 
+// upbge
 bool StorageBuf::read_fast(void *data)
 {
   /* Default fallback: use the regular synchronous path (always returns true). */

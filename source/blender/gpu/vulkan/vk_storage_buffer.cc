@@ -163,6 +163,7 @@ void VKStorageBuffer::read(void *data)
   async_read_buffer_ = nullptr;
 }
 
+// upbge
 bool VKStorageBuffer::read_fast(void *data)
 {
   ensure_allocated();
