@@ -25,6 +25,10 @@ class VKStorageBuffer : public StorageBuf {
 
   /** Staging buffer that is used when doing an async read-back. */
   VKStagingBuffer *async_read_buffer_ = nullptr;
+  /** Dedicated host-visible buffer for fast readback (persistent mapping). */
+  VKStagingBuffer *fast_read_buffer_ = nullptr;
+  /** Timeline value from the previous read_fast submission, 0 if none pending. */
+  TimelineValue fast_read_timeline_ = 0;
   VkDeviceSize offset_ = 0;
 
  public:
@@ -37,6 +41,7 @@ class VKStorageBuffer : public StorageBuf {
   void clear(uint32_t clear_value) override;
   void copy_sub(VertBuf *src, uint dst_offset, uint src_offset, uint copy_size) override;
   void read(void *data) override;
+  bool read_fast(void *data) override;
   void async_flush_to_host() override;
   void sync_as_indirect_buffer() override { /* No-Op. */ };
 

@@ -32,6 +32,10 @@ VKStorageBuffer::~VKStorageBuffer()
     MEM_delete(async_read_buffer_);
     async_read_buffer_ = nullptr;
   }
+  if (fast_read_buffer_) {
+    MEM_delete(fast_read_buffer_);
+    fast_read_buffer_ = nullptr;
+  }
 }
 
 void VKStorageBuffer::update(const void *data)
@@ -157,6 +161,44 @@ void VKStorageBuffer::read(void *data)
   async_read_buffer_->host_buffer_get().read_async(context, data);
   MEM_delete(async_read_buffer_);
   async_read_buffer_ = nullptr;
+}
+
+bool VKStorageBuffer::read_fast(void *data)
+{
+  ensure_allocated();
+  VKContext &context = *VKContext::get();
+
+  /* Create a dedicated host-visible staging buffer that persists across frames. */
+  if (fast_read_buffer_ == nullptr) {
+    fast_read_buffer_ = MEM_new<VKStagingBuffer>(
+        __func__, buffer_, VKStagingBuffer::Direction::DeviceToHost);
+  }
+
+  bool has_result = false;
+
+  /* Step 1: If a previous submission is pending, check if it has completed.
+   * After a full frame of rendering, the timeline should have advanced past our value. */
+  if (fast_read_timeline_ != 0) {
+    VKDevice &device = VKBackend::get().device;
+    /* Non-blocking check: timeline should already be past this value after a full frame. */
+    device.wait_for_timeline(fast_read_timeline_);
+    fast_read_timeline_ = 0;
+
+    /* The staging buffer is mapped — just memcpy. */
+    BLI_assert(fast_read_buffer_->host_buffer_get().is_mapped());
+    memcpy(data, fast_read_buffer_->host_buffer_get().mapped_memory_get(), size_in_bytes_);
+    has_result = true;
+  }
+
+  /* Step 2: Submit a new async copy for the next call to pick up. */
+  fast_read_buffer_->copy_from_device(context);
+
+  /* Flush the render graph to actually submit the copy command, but do NOT wait. */
+  context.rendering_end();
+  fast_read_timeline_ = context.flush_render_graph(RenderGraphFlushFlags::SUBMIT |
+                                                   RenderGraphFlushFlags::RENEW_RENDER_GRAPH);
+
+  return has_result;
 }
 
 }  // namespace gpu

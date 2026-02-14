@@ -78,6 +78,23 @@ void GPU_storagebuf_sync_to_host(gpu::StorageBuf *ssbo);
 void GPU_storagebuf_read(gpu::StorageBuf *ssbo, void *data);
 
 /**
+ * Non-blocking 1-frame-delayed readback for small, frequent reads (e.g. bounding boxes).
+ *
+ * Each call submits an async GPU→host copy and returns the result from the *previous*
+ * frame's copy (which is already complete, so no pipeline stall occurs).
+ *
+ * Returns `true` if `data` was filled with valid results, `false` on the first call
+ * (no previous request to read from yet — `data` is untouched).
+ *
+ * Internally uses:
+ * - OpenGL: `glBufferStorage` with `GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT` + fence sync.
+ * - Vulkan: Persistent `VKStagingBuffer` + timeline semaphore.
+ *
+ * Falls back to synchronous `GPU_storagebuf_read` on backends that don't override it.
+ */
+bool GPU_storagebuf_read_fast(gpu::StorageBuf *ssbo, void *data);
+
+/**
  * \brief Copy a part of a vertex buffer to a storage buffer.
  *
  * \param ssbo: destination storage buffer

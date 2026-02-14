@@ -46,6 +46,14 @@ void StorageBuf::usage_size_set(size_t usage_size)
   usage_size_in_bytes_ = usage_size;
 }
 
+bool StorageBuf::read_fast(void *data)
+{
+  /* Default fallback: use the regular synchronous path (always returns true). */
+  async_flush_to_host();
+  read(data);
+  return true;
+}
+
 }  // namespace gpu
 
 /** \} */
@@ -130,6 +138,11 @@ void GPU_storagebuf_sync_to_host(gpu::StorageBuf *ssbo)
 void GPU_storagebuf_read(gpu::StorageBuf *ssbo, void *data)
 {
   ssbo->read(data);
+}
+
+bool GPU_storagebuf_read_fast(gpu::StorageBuf *ssbo, void *data)
+{
+  return ssbo->read_fast(data);
 }
 
 void GPU_storagebuf_sync_as_indirect_buffer(gpu::StorageBuf *ssbo)

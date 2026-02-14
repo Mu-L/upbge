@@ -82,7 +82,7 @@
 
 #include "DRW_render.hh"
 
-#include "../blenkernel/intern/mesh_gpu_cache.hh"
+#include "../blenkernel/intern/mesh_gpu_cache.hh"                     // UPBGE
 #include "DNA_key_types.h"                                            // UPBGE
 #include "../draw/intern/gpu_modifiers/draw_armature_skinning.hh"     // UPBGE
 #include "../draw/intern/gpu_modifiers/draw_displace.hh"              // UPBGE

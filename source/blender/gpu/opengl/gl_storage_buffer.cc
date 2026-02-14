@@ -250,6 +250,70 @@ void GLStorageBuf::read(void *data)
   memcpy(data, persistent_ptr_, size_in_bytes_);
 }
 
+bool GLStorageBuf::read_fast(void *data)
+{
+  if (data == nullptr) {
+    return false;
+  }
+  if (ssbo_id_ == 0) {
+    this->init();
+  }
+
+  /* Ensure the persistent-mapped readback buffer exists (coherent = GPU writes auto-visible). */
+  if (read_ssbo_id_ == 0) {
+    glGenBuffers(1, &read_ssbo_id_);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, read_ssbo_id_);
+    glBufferStorage(GL_SHADER_STORAGE_BUFFER,
+                    alloc_size_in_bytes_,
+                    nullptr,
+                    GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT | GL_MAP_READ_BIT);
+    persistent_ptr_ = glMapBufferRange(GL_SHADER_STORAGE_BUFFER,
+                                       0,
+                                       alloc_size_in_bytes_,
+                                       GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT |
+                                           GL_MAP_READ_BIT);
+    BLI_assert(persistent_ptr_);
+    debug::object_label(GL_SHADER_STORAGE_BUFFER, read_ssbo_id_, name_);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+  }
+
+  bool has_result = false;
+
+  /* Step 1: If a fence from a PREVIOUS call is pending, check if it's done.
+   * By now (next frame) it should be signaled — zero or near-zero wait. */
+  if (read_fence_) {
+    GLenum status = glClientWaitSync(read_fence_, GL_SYNC_FLUSH_COMMANDS_BIT, 0);
+    if (status == GL_ALREADY_SIGNALED || status == GL_CONDITION_SATISFIED) {
+      /* Previous copy is complete — read from the persistent pointer. */
+      memcpy(data, persistent_ptr_, size_in_bytes_);
+      has_result = true;
+      glDeleteSync(read_fence_);
+      read_fence_ = nullptr;
+    }
+    else {
+      /* Still not ready (unlikely after a full frame). Don't wait — skip this readback.
+       * The fence stays alive; we'll check again next frame. */
+      return false;
+    }
+  }
+
+  /* Step 2: Submit a NEW async copy for the next call to pick up. */
+  if (GLContext::direct_state_access_support) {
+    glCopyNamedBufferSubData(ssbo_id_, read_ssbo_id_, 0, 0, size_in_bytes_);
+  }
+  else {
+    glBindBuffer(GL_COPY_READ_BUFFER, ssbo_id_);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, read_ssbo_id_);
+    glCopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, 0, size_in_bytes_);
+    glBindBuffer(GL_COPY_READ_BUFFER, 0);
+    glBindBuffer(GL_COPY_WRITE_BUFFER, 0);
+  }
+
+  read_fence_ = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+
+  return has_result;
+}
+
 void GLStorageBuf::sync_as_indirect_buffer()
 {
   bind_as(GL_DRAW_INDIRECT_BUFFER);

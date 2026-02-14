@@ -51,6 +51,26 @@ class StorageBuf {
   virtual void read(void *data) = 0;
   virtual void async_flush_to_host() = 0;
   virtual void sync_as_indirect_buffer() = 0;
+
+  /**
+   * Non-blocking 1-frame-delayed readback for small, frequent reads (e.g. bounding boxes).
+   *
+   * Each call does two things:
+   * 1. If a previous readback request is pending and complete, copies the result into `data`
+   *    and returns `true`.
+   * 2. Submits a new async copy from the device SSBO to a persistent-mapped readback buffer
+   *    for the *next* call to pick up.
+   *
+   * On the very first call (no previous request), returns `false` and `data` is untouched.
+   * This means the data is always 1 frame behind, which is acceptable for bounding boxes.
+   *
+   * **Key advantage**: avoids the full pipeline flush / GPU stall that `read()` causes.
+   * The GPU copy runs asynchronously alongside rendering; by the next frame it is complete.
+   *
+   * The default implementation falls back to the synchronous `async_flush_to_host()` + `read()`
+   * path (returns `true` always, blocking).
+   */
+  virtual bool read_fast(void *data);
 };
 
 #undef DEBUG_NAME_LEN

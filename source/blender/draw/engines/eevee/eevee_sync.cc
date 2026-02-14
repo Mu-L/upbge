@@ -11,6 +11,8 @@
 #include "BKE_paint.hh"
 #include "BKE_paint_bvh.hh"
 #include "DNA_curves_types.h"
+
+#include "GPU_context.hh"
 #include "DNA_modifier_types.h"
 #include "DNA_particle_types.h"
 #include "DNA_pointcloud_types.h"
@@ -97,12 +99,17 @@ void SyncModule::sync_mesh(Object *ob, ObjectHandle &ob_handle, const ObjectRef 
     return;
   }
 
-  /* UPBGE shadows artifacts GPU deform fix */
-  if (ob->type == OB_MESH) {
-    Mesh *me_eval = (Mesh *)ob->data;
-    if (me_eval->is_running_gpu_animation_playback) {
-      // Clear to avoid shadow artifacts.
-      inst_.shadows.mark_gpu_deform_clear_needed();
+  /* UPBGE shadows artifacts GPU deform fix.
+   * On non-Metal backends, GPU bounds are updated inside the scatter shader
+   * (via in-shader reduction + async readback), so the shadow clip ranges
+   * stay consistent. On Metal, read_fast is not implemented, so we fall back
+   * to clearing tilemaps_clip to force EEVEE to recalculate each frame. */
+  if (GPU_backend_get_type() == GPU_BACKEND_METAL) {
+    if (ob->type == OB_MESH) {
+      Mesh *me_eval = (Mesh *)ob->data;
+      if (me_eval->is_running_gpu_animation_playback) {
+        inst_.shadows.mark_gpu_deform_clear_needed();
+      }
     }
   }
 
