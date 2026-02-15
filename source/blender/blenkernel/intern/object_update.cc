@@ -237,7 +237,7 @@ void BKE_object_handle_data_update(Depsgraph *depsgraph, Scene *scene, Object *o
     }
   }
 
-  if (DEG_is_active(depsgraph) && !is_running_gpu_animation_playback) {
+  if (DEG_is_active(depsgraph)) {
     Object *object_orig = DEG_get_original(ob);
     object_orig->runtime->bounds_eval = BKE_object_evaluated_geometry_bounds(ob);
   }
